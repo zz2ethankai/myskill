@@ -1,0 +1,35 @@
+name: Mirror pristine cover
+
+on:
+  push:
+    paths:
+      - .github/workflows/mirror-pristine-cover.yml
+
+permissions:
+  contents: write
+
+jobs:
+  mirror-cover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch exact upstream cover
+        shell: bash
+        run: |
+          mkdir -p pristine
+          curl -L --fail --silent --show-error \
+            https://raw.githubusercontent.com/newbanser/pristine-skill/179346a5076d1434367125e953867cf250f17b33/cover.png \
+            -o pristine/cover.png
+          test "$(git hash-object pristine/cover.png)" = "80709963b8bac00ccb63e2eacf49c93a1bcf8d84"
+
+      - name: Commit cover
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pristine/cover.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Mirror pristine cover"
+            git push
+          fi
